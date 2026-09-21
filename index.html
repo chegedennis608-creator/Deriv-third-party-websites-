@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <title>DerivEdge Trader</title>
+  <style>
+    :root{
+      --bg:#070b16;--panel:#0d1426;--panel2:#111a30;--line:#1d2942;
+      --text:#edf3ff;--muted:#8d9ab3;--accent:#6ea8ff;--good:#35d49a;
+      --warn:#f6c85f;--bad:#ff667d;--shadow:0 16px 50px rgba(0,0,0,.28)
+    }
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,#172345 0,#070b16 42%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+    button,input,select{font:inherit} button{cursor:pointer}
+    .app{display:flex;min-height:100vh}.sidebar{width:245px;background:rgba(8,13,27,.92);border-right:1px solid var(--line);padding:22px 16px;position:fixed;inset:0 auto 0 0;z-index:5}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;margin:3px 8px 28px}.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#6ea8ff,#7c5cff);display:grid;place-items:center;font-weight:900}
+    .nav button{width:100%;border:0;background:transparent;color:var(--muted);text-align:left;padding:12px 13px;border-radius:10px;margin:3px 0}.nav button.active,.nav button:hover{background:#141f38;color:#fff}
+    .side-status{position:absolute;bottom:20px;left:16px;right:16px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1222;font-size:12px;color:var(--muted)}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:7px}.dot.on{background:var(--good)}
+    main{margin-left:245px;width:calc(100% - 245px);padding:24px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}
+    h1,h2,h3,p{margin-top:0}.subtitle{color:var(--muted);margin:4px 0 0}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);background:#111a30;color:#fff;padding:10px 14px;border-radius:10px}.btn.primary{background:#477de5;border-color:#5c90f7}.btn.good{background:#176b51;border-color:#23956e}.btn.danger{background:#6f2230;border-color:#a33547}.btn:disabled{opacity:.5;cursor:not-allowed}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:rgba(13,20,38,.9);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.span3{grid-column:span 3}.span4{grid-column:span 4}.span5{grid-column:span 5}.span6{grid-column:span 6}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
+    .stat-label{font-size:12px;color:var(--muted)}.stat{font-size:27px;font-weight:800;margin:6px 0}.small{font-size:12px;color:var(--muted)}
+    .market-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #18233a}.market-row:last-child{border-bottom:0}.pill{padding:5px 9px;border-radius:999px;font-size:11px;background:#16223b;color:#b9c9e8}.pill.up{background:#123d31;color:#63e5b7}.pill.down{background:#401d28;color:#ff8fa0}
+    .chart{height:260px;position:relative;overflow:hidden;border-radius:12px;background:#09101f;border:1px solid #17223a}.chart canvas{width:100%;height:100%}
+    .tabs{display:flex;gap:7px;overflow:auto;margin-bottom:15px}.tab{white-space:nowrap}.tab.active{background:#477de5;border-color:#5c90f7}
+    .section{display:none}.section.active{display:block}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}.field label{font-size:12px;color:var(--muted)}input,select{width:100%;background:#080f1e;color:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;outline:none}input:focus,select:focus{border-color:#5f91f0}
+    .formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.formgrid .full{grid-column:1/-1}
+    .bot{padding:14px;border:1px solid var(--line);border-radius:13px;background:#0a1223;margin-bottom:10px}.bot-head{display:flex;justify-content:space-between;gap:10px}.toggle{position:relative;width:44px;height:24px;background:#25324d;border-radius:20px;border:0}.toggle i{position:absolute;width:18px;height:18px;top:2px;left:3px;border-radius:50%;background:#fff;transition:.2s}.toggle.on{background:#247f62}.toggle.on i{left:22px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #18233a}th{color:var(--muted);font-weight:600}
+    .notice{padding:12px 13px;border:1px solid #263654;border-radius:11px;background:#0c1528;color:#b9c9e8;font-size:13px;margin-bottom:12px}.notice strong{color:#fff}
+    .toast{position:fixed;right:20px;bottom:20px;background:#111a30;border:1px solid var(--line);padding:12px 15px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:20}
+    .empty{padding:28px;text-align:center;color:var(--muted)}.connection{display:flex;align-items:center;gap:8px}
+    @media(max-width:950px){.sidebar{width:72px;padding:18px 10px}.brand span,.nav button span,.side-status div:last-child{display:none}.brand{justify-content:center;margin-bottom:22px}.nav button{text-align:center}.side-status{left:10px;right:10px}.app main{margin-left:72px;width:calc(100% - 72px);padding:15px}.span3,.span4,.span5,.span6,.span7,.span8{grid-column:span 12}.top{align-items:flex-start;flex-direction:column}.formgrid{grid-template-columns:1fr}}
+    @media(max-width:520px){main{padding:10px!important}.card{padding:13px}.stat{font-size:23px}.actions{width:100%}.actions .btn{flex:1}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">D</div><span>DerivEdge</span></div>
+    <nav class="nav">
+      <button class="active" data-section="dashboard">◈ <span>Dashboard</span></button>
+      <button data-section="markets">▦ <span>Markets</span></button>
+      <button data-section="analysis">⌁ <span>AI Analysis</span></button>
+      <button data-section="bots">◉ <span>Bots</span></button>
+      <button data-section="trade">↗ <span>Manual Trade</span></button>
+      <button data-section="history">≡ <span>Trade History</span></button>
+      <button data-section="settings">⚙ <span>Settings</span></button>
+    </nav>
+    <div class="side-status">
+      <div><span id="statusDot" class="dot"></span><span id="statusText">Disconnected</span></div>
+      <div style="margin-top:7px">Deriv WebSocket</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div><h1 id="pageTitle">Trading Dashboard</h1><p class="subtitle">Normal bots, AI analysis and Deriv market tools</p></div>
+      <div class="actions">
+        <button class="btn" id="demoBtn">Demo mode: ON</button>
+        <button class="btn primary" id="connectBtn">Connect Market Data</button>
+      </div>
+    </div>
+
+    <section id="dashboard" class="section active">
+      <div class="grid">
+        <div class="card span3"><div class="stat-label">Account</div><div class="stat" id="accountType">Demo</div><div class="small">No trading authorization stored</div></div>
+        <div class="card span3"><div class="stat-label">Balance</div><div class="stat" id="balance">$0.00</div><div class="small">Connect an authorized account for live balance</div></div>
+        <div class="card span3"><div class="stat-label">Selected Market</div><div class="stat" id="dashMarket">Volatility 75</div><div class="small" id="dashQuote">Waiting for ticks</div></div>
+        <div class="card span3"><div class="stat-label">Bot Status</div><div class="stat" id="botStatus">Stopped</div><div class="small">Safety controls active</div></div>
+
+        <div class="card span8">
+          <h3>Live Market Chart</h3>
+          <div class="chart"><canvas id="chart"></canvas></div>
+        </div>
+        <div class="card span4">
+          <h3>Market Snapshot</h3>
+          <div id="marketSnapshot"></div>
+        </div>
+        <div class="card span6">
+          <h3>AI Signal Engine</h3>
+          <div class="notice"><strong>Analysis only:</strong> signals are informational and do not guarantee a profitable trade.</div>
+          <div class="market-row"><span>Trend</span><span class="pill" id="trendPill">WAITING</span></div>
+          <div class="market-row"><span>Tick momentum</span><span id="momentum">0.00%</span></div>
+          <div class="market-row"><span>Even / Odd balance</span><span id="evenodd">50 / 50</span></div>
+          <div class="market-row"><span>Last digit</span><span id="lastDigit">-</span></div>
+        </div>
+        <div class="card span6">
+          <h3>Quick Actions</h3>
+          <div class="actions">
+            <button class="btn primary" onclick="showSection('analysis')">Open Analysis</button>
+            <button class="btn" onclick="showSection('bots')">Configure Bots</button>
+            <button class="btn" onclick="showSection('trade')">Manual Trade</button>
+          </div>
+          <p class="small" style="margin-top:14px">Trading is disabled in demo UI until an authorized Deriv connection is configured.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="markets" class="section">
+      <div class="grid">
+        <div class="card span8"><h3>Volatility Markets</h3><div id="marketsList"></div></div>
+        <div class="card span4"><h3>Market Controls</h3>
+          <div class="field"><label>Market</label><select id="marketSelect"></select></div>
+          <div class="field"><label>Tick history</label><input id="historySize" type="number" min="20" max="500" value="100"></div>
+          <button class="btn primary" id="applyMarket">Apply Market</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="analysis" class="section">
+      <div class="grid">
+        <div class="card span7">
+          <h3>AI Market Analysis</h3>
+          <div class="notice">This engine calculates descriptive statistics from received ticks. It is not a promise of direction or profit.</div>
+          <div class="grid" style="margin:0">
+            <div class="card span4"><div class="stat-label">Last digit</div><div class="stat" id="aDigit">-</div></div>
+            <div class="card span4"><div class="stat-label">Even %</div><div class="stat" id="aEven">50%</div></div>
+            <div class="card span4"><div class="stat-label">Odd %</div><div class="stat" id="aOdd">50%</div></div>
+          </div>
+          <h3 style="margin-top:18px">Digit distribution</h3><div id="digitBars"></div>
+        </div>
+        <div class="card span5">
+          <h3>Strategy Monitor</h3>
+          <div class="field"><label>Analysis mode</label><select id="analysisMode"><option>Trend + Momentum</option><option>Even / Odd statistics</option><option>Last-digit distribution</option><option>Conservative filter</option></select></div>
+          <div class="market-row"><span>Current state</span><span class="pill" id="analysisState">WAITING</span></div>
+          <div class="market-row"><span>Sample size</span><span id="sampleSize">0</span></div>
+          <div class="market-row"><span>Range</span><span id="rangeValue">-</span></div>
+          <button class="btn" style="margin-top:14px" id="refreshAnalysis">Refresh analysis</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="bots" class="section">
+      <div class="grid">
+        <div class="card span8">
+          <h3>Bot Center</h3>
+          <div class="notice"><strong>Safety:</strong> bots start in simulation mode. Live execution requires an authorized Deriv account and an explicit live-trading connection.</div>
+          <div class="bot"><div class="bot-head"><div><strong>Digit Statistics Bot</strong><div class="small">Tracks last-digit distribution and reports conditions.</div></div><button class="toggle" data-bot="digit"><i></i></button></div></div>
+          <div class="bot"><div class="bot-head"><div><strong>Trend Monitor Bot</strong><div class="small">Monitors short-term tick momentum.</div></div><button class="toggle" data-bot="trend"><i></i></button></div></div>
+          <div class="bot"><div class="bot-head"><div><strong>AI Analysis Bot</strong><div class="small">Combines the available descriptive indicators.</div></div><button class="toggle" data-bot="ai"><i></i></button></div></div>
+          <div class="bot"><div class="bot-head"><div><strong>Manual Trade Assistant</strong><div class="small">Prepares contract details without placing a live trade.</div></div><button class="toggle" data-bot="manual"><i></i></button></div></div>
+        </div>
+        <div class="card span4">
+          <h3>Risk Controls</h3>
+          <div class="field"><label>Initial stake (USD)</label><input id="stake" type="number" min="0.35" step="0.01" value="1"></div>
+          <div class="field"><label>Take profit (USD)</label><input id="takeProfit" type="number" min="0" step="0.01" value="10"></div>
+          <div class="field"><label>Stop loss (USD)</label><input id="stopLoss" type="number" min="0" step="0.01" value="5"></div>
+          <div class="field"><label>Recovery</label><select id="recovery"><option>Disabled</option><option>2× after loss</option></select></div>
+          <button class="btn good" id="saveRisk">Save Controls</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="trade" class="section">
+      <div class="grid">
+        <div class="card span6">
+          <h3>Manual Trade Ticket</h3>
+          <div class="notice">The ticket is ready for API integration. It will not send a real contract from this public static page.</div>
+          <div class="formgrid">
+            <div class="field"><label>Contract</label><select id="contract"><option>Rise / Fall</option><option>Higher / Lower</option><option>Even / Odd</option><option>Matches / Differs</option></select></div>
+            <div class="field"><label>Direction</label><select id="direction"><option>Rise</option><option>Fall</option><option>Over</option><option>Under</option><option>Even</option><option>Odd</option></select></div>
+            <div class="field"><label>Stake (USD)</label><input id="tradeStake" type="number" min="0.35" step="0.01" value="1"></div>
+            <div class="field"><label>Duration (ticks)</label><input id="duration" type="number" min="1" value="1"></div>
+            <div class="field full"><button class="btn primary" id="prepareTrade">Prepare Trade</button></div>
+          </div>
+          <div id="tradeMessage" class="small"></div>
+        </div>
+        <div class="card span6"><h3>Connection</h3>
+          <div class="field"><label>Deriv WebSocket App ID</label><input id="appId" placeholder="Enter your Deriv app ID"></div>
+          <div class="field"><label>Authorization token</label><input id="token" type="password" placeholder="Never save tokens in source code"></div>
+          <button class="btn primary" id="authBtn">Authorize Account</button>
+          <p class="small" style="margin-top:12px">For production use, keep secrets out of GitHub. This browser UI does not persist your token.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="history" class="section">
+      <div class="card"><h3>Trade History</h3><table><thead><tr><th>Time</th><th>Market</th><th>Contract</th><th>Result</th><th>Amount</th><th>Status</th></tr></thead><tbody id="historyBody"><tr><td colspan="6" class="empty">No trades yet.</td></tr></tbody></table></div>
+    </section>
+
+    <section id="settings" class="section">
+      <div class="grid">
+        <div class="card span6"><h3>Interface</h3>
+          <div class="field"><label>Display name</label><input id="displayName" value="DerivEdge Trader"></div>
+          <div class="field"><label>Default market</label><select id="defaultMarket"></select></div>
+          <button class="btn primary" id="saveSettings">Save Settings</button>
+        </div>
+        <div class="card span6"><h3>Deployment</h3>
+          <p class="small">This build is intentionally dependency-free so it can be served directly by Vercel from <code>index.html</code>.</p>
+          <div class="market-row"><span>Framework</span><span class="pill">Static HTML</span></div>
+          <div class="market-row"><span>Build command</span><span class="pill">None</span></div>
+          <div class="market-row"><span>Root directory</span><span class="pill">./</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const markets = [
+  {symbol:"R_10",name:"Volatility 10 Index"},{symbol:"R_25",name:"Volatility 25 Index"},
+  {symbol:"R_50",name:"Volatility 50 Index"},{symbol:"R_75",name:"Volatility 75 Index"},
+  {symbol:"R_100",name:"Volatility 100 Index"},{symbol:"1HZ10V",name:"Volatility 10 (1s)"},
+  {symbol:"1HZ25V",name:"Volatility 25 (1s)"},{symbol:"1HZ50V",name:"Volatility 50 (1s)"},
+  {symbol:"1HZ75V",name:"Volatility 75 (1s)"},{symbol:"1HZ100V",name:"Volatility 100 (1s)"}
+];
+let selected="R_75", ws=null, connected=false, demo=true, prices=[], digitHistory=[], bots={};
+const $=id=>document.getElementById(id);
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(window._toast);window._toast=setTimeout(()=>$("toast").style.display="none",2800)}
+function showSection(id){
+  document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.section===id));
+  $(id).classList.add("active");
+  const names={dashboard:"Trading Dashboard",markets:"Markets",analysis:"AI Analysis",bots:"Bot Center",trade:"Manual Trade",history:"Trade History",settings:"Settings"};
+  $("pageTitle").textContent=names[id]||"DerivEdge Trader";
+}
+window.showSection=showSection;
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>showSection(b.dataset.section));
+function setConnection(on,text){connected=on;$("statusDot").classList.toggle("on",on);$("statusText").textContent=text}
+function seedDemo(){
+  let p=selected==="R_75"?1000:500;
+  prices=[]; digitHistory=[];
+  for(let i=0;i<140;i++){p+=((Math.random()-.5)*p*.0008);prices.push(p);digitHistory.push(Math.floor(Math.random()*10))}
+  updateUI();
+}
+function lastDigit(v){let s=String(v);let m=s.match(/(\d)$/);return m?Number(m[1]):Math.floor(Math.random()*10)}
+function addTick(quote){
+  const q=Number(quote); if(!Number.isFinite(q))return;
+  prices.push(q); if(prices.length>500)prices.shift();
+  digitHistory.push(lastDigit(q)); if(digitHistory.length>500)digitHistory.shift();
+  updateUI();
+}
+function updateUI(){
+  if(!prices.length)return;
+  const q=prices[prices.length-1], prev=prices[Math.max(0,prices.length-8)]||q;
+  const mom=((q-prev)/Math.max(Math.abs(prev),1))*100;
+  const digit=digitHistory[digitHistory.length-1]??"-";
+  $("dashQuote").textContent=q.toFixed(3);
+  $("lastDigit").textContent=digit;
+  $("aDigit").textContent=digit;
+  $("momentum").textContent=mom.toFixed(3)+"%";
+  const even=digitHistory.filter(d=>d%2===0).length, total=digitHistory.length||1, ep=even/total*100;
+  $("evenodd").textContent=Math.round(ep)+" / "+Math.round(100-ep);
+  $("aEven").textContent=Math.round(ep)+"%"; $("aOdd").textContent=Math.round(100-ep)+"%";
+  const trend=mom>.03?"UP":mom<-.03?"DOWN":"FLAT";
+  $("trendPill").textContent=trend;$("trendPill").className="pill "+(trend==="UP"?"up":trend==="DOWN"?"down":"");
+  $("analysisState").textContent=prices.length>=20?"READY":"WAITING"; $("sampleSize").textContent=prices.length;
+  $("rangeValue").textContent=(Math.max(...prices)-Math.min(...prices)).toFixed(3);
+  renderDigits(); renderSnapshot(); drawChart();
+}
+function renderSnapshot(){
+  $("marketSnapshot").innerHTML=markets.slice(0,6).map(m=>{
+    const active=m.symbol===selected;
+    return `<div class="market-row"><span>${m.name.replace("Volatility ","Vol ")}</span><span class="pill ${active?"up":""}">${active?prices.at(-1)?.toFixed(2)||"—":"—"}</span></div>`;
+  }).join("");
+  $("dashMarket").textContent=markets.find(m=>m.symbol===selected)?.name||selected;
+}
+function renderMarkets(){
+  $("marketsList").innerHTML=markets.map(m=>`<div class="market-row"><div><strong>${m.name}</strong><div class="small">${m.symbol}</div></div><button class="btn ${m.symbol===selected?"primary":""}" onclick="chooseMarket('${m.symbol}')">Select</button></div>`).join("");
+}
+function renderDigits(){
+  const c=Array(10).fill(0);digitHistory.forEach(d=>c[d]++);
+  const max=Math.max(1,...c);
+  $("digitBars").innerHTML=c.map((n,i)=>`<div style="display:flex;align-items:center;gap:9px;margin:7px 0"><span style="width:15px">${i}</span><div style="height:10px;background:#1b2944;border-radius:9px;flex:1"><div style="height:100%;width:${n/max*100}%;background:#5d8ff0;border-radius:9px"></div></div><span class="small" style="width:30px;text-align:right">${n}</span></div>`).join("");
+}
+function drawChart(){
+  const c=$("chart"),r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;
+  const x=c.getContext("2d");x.scale(d,d);const w=r.width,h=r.height;
+  x.clearRect(0,0,w,h);if(prices.length<2)return;
+  const lo=Math.min(...prices),hi=Math.max(...prices),range=hi-lo||1;
+  x.strokeStyle="#1a2740";x.lineWidth=1;
+  for(let i=1;i<5;i++){let y=i*h/5;x.beginPath();x.moveTo(0,y);x.lineTo(w,y);x.stroke()}
+  x.strokeStyle="#6ea8ff";x.lineWidth=2;x.beginPath();
+  prices.forEach((p,i)=>{let px=i/(prices.length-1)*w,py=h-(p-lo)/range*(h-20)-10;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+}
+function chooseMarket(s){selected=s;seedDemo();renderMarkets();$("marketSelect").value=s;$("defaultMarket").value=s;toast("Market selected: "+s)}
+function populate(){
+  ["marketSelect","defaultMarket"].forEach(id=>$(id).innerHTML=markets.map(m=>`<option value="${m.symbol}">${m.name}</option>`).join(""));
+  $("marketSelect").value=selected;$("defaultMarket").value=selected;
+  renderMarkets();seedDemo();
+}
+function connectMarket(){
+  const appId=$("appId").value.trim()||"";
+  if(!appId){toast("Enter your Deriv App ID in Manual Trade → Connection.");showSection("trade");return}
+  if(ws){try{ws.close()}catch(e){}}
+  try{
+    ws=new WebSocket("wss://ws.derivws.com/websockets/v3?app_id="+encodeURIComponent(appId));
+    ws.onopen=()=>{setConnection(true,"Market connected");ws.send(JSON.stringify({ticks:selected,subscribe:1}));toast("Connected to Deriv market data")};
+    ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.tick)addTick(m.tick.quote)};
+    ws.onerror=()=>{setConnection(false,"Connection error");toast("WebSocket connection failed")};
+    ws.onclose=()=>setConnection(false,"Disconnected");
+  }catch(e){setConnection(false,"Disconnected");toast("Unable to open WebSocket")}
+}
+$("connectBtn").onclick=connectMarket;
+$("demoBtn").onclick=()=>{demo=!demo;$("demoBtn").textContent="Demo mode: "+(demo?"ON":"OFF");toast(demo?"Demo mode enabled":"Demo mode disabled")};
+$("applyMarket").onclick=()=>{chooseMarket($("marketSelect").value);if(ws&&connected){ws.send(JSON.stringify({forget_all:"ticks"}));ws.send(JSON.stringify({ticks:selected,subscribe:1}))}};
+$("refreshAnalysis").onclick=()=>{updateUI();toast("Analysis refreshed")};
+document.querySelectorAll(".toggle").forEach(t=>t.onclick=()=>{const k=t.dataset.bot;bots[k]=!bots[k];t.classList.toggle("on",bots[k]);$("botStatus").textContent=Object.values(bots).some(Boolean)?"Running":"Stopped";toast((bots[k]?"Started ":"Stopped ")+k+" bot")});
+$("saveRisk").onclick=()=>toast("Risk controls saved locally for this session");
+$("prepareTrade").onclick=()=>{$("tradeMessage").textContent="Trade prepared in simulation mode. No live contract was sent.";toast("Simulation trade prepared")};
+$("authBtn").onclick=()=>{if(!$("appId").value.trim()||!$("token").value.trim()){toast("App ID and token are required for authorization.");return}toast("Authorization wiring is reserved for the secure Deriv account flow; token is not stored.");};
+$("saveSettings").onclick=()=>toast("Settings saved for this session");
+$("marketSelect").onchange=e=>chooseMarket(e.target.value);
+window.chooseMarket=chooseMarket;
+window.addEventListener("resize",drawChart);
+populate();
+setInterval(()=>{if(demo&&!connected){let q=prices.at(-1)||1000;q+=((Math.random()-.49)*q*.0006);addTick(q)}},900);
+</script>
+</body>
+</html>
